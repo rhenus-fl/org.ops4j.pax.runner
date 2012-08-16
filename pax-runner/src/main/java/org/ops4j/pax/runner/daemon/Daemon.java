@@ -416,9 +416,7 @@ public class Daemon {
 
     private static String createRunnerHomeDirSuffix() {
     	String runnerHomeDirSuffix = System.getProperty(RELATIVE_RUNNER_HOME);
-    	System.out.println(runnerHomeDirSuffix);
-
-		if (runnerHomeDirSuffix == null) {
+   		if (runnerHomeDirSuffix == null) {
 			runnerHomeDirSuffix = "runner";
 		}
 

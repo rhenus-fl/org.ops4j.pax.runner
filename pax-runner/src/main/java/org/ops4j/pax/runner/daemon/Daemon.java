@@ -32,26 +32,30 @@ import org.ops4j.pax.runner.platform.StoppableJavaRunner;
  * <br/>
  * The Daemon process terminates either when the Pax-Runner completes execution,
  * or when a shutdown command is issued via shutdown port.
- * 
+ *
  * @author <a href="mailto:open4thomas@gmail.com">Thomas Joseph</a>
  * @since 0.20.0 (29 April 2009)
  *
  */
 public class Daemon {
 
-    // Constants -----------------------------------------------------
+
+
+	// Constants -----------------------------------------------------
     /**
      * Configuration option to specify password file, if not specified, the name
      * of the default password file.
      */
     public static final String PASSWORD_FILE = "org.ops4j.pax.runner.daemon.password.file";
-    private static final String INFO_FILE = "org.ops4j.pax.runner.daemon.info"; 
-    private static final String LOCK_FILE = "org.ops4j.pax.runner.daemon.lock"; 
+    private static final String INFO_FILE = "org.ops4j.pax.runner.daemon.info";
+    private static final String LOCK_FILE = "org.ops4j.pax.runner.daemon.lock";
     private static final String NEWLINE= "\r\n";
     private static final String OPT_NETWORK_TIMEOUT="org.ops4j.pax.runner.daemon.network.timeout";
     private static final String OPT_SHUTDOWN_TIMEOUT = "org.ops4j.pax.runner.daemon.shutdown.timeout";
     private static final String OPT_SHUTDOWN_CMD = "org.ops4j.pax.runner.daemon.shutdown.cmd";
     private static final String OPT_SHUTDOWN_PORT = "org.ops4j.pax.runner.daemon.shutdown.port";
+
+    private static final String RELATIVE_RUNNER_HOME = "relative.runner.home";
 
     // Attributes ----------------------------------------------------
     private CommandLine commandLine = null;
@@ -91,7 +95,7 @@ public class Daemon {
 
     /**
      * Determines if any instance of the Daemon is already started.
-     * 
+     *
      * @return True if any instance of this class is already started, false otherwise.
      */
     public static boolean isDaemonStarted() {
@@ -108,7 +112,7 @@ public class Daemon {
     /**
      * Prepares the instance of this class with configurations, before launching
      * the Pax-Runner.
-     * 
+     *
      * @param args The arguments passed to start this instance.
      */
     public void load(String... args) {
@@ -123,7 +127,7 @@ public class Daemon {
     /**
      * Starts the Daemon - Launches Pax Runner, Opens up shutdown port on which
      * it will listen to shutdown command.
-     * 
+     *
      */
     public void start() {
         new RunnerLauncher().start();
@@ -148,7 +152,7 @@ public class Daemon {
     /**
      * Retrieves the file that stores password information for the current
      * configuration.
-     * 
+     *
      * @return The password information file.
      */
     static File getPasswordFile(String passwordFilePath) {
@@ -160,7 +164,7 @@ public class Daemon {
 
     /**
      * Encrypts and returns the encrypted string for the given message.
-     * 
+     *
      * @param message the pass phrase that is to be encrypted.
      * @return the encrypted string for the given message.
      */
@@ -178,7 +182,7 @@ public class Daemon {
 
     /**
      * Creates a file on the file system with the given content for the file.
-     * 
+     *
      * @param file The file that should be written to the filesystem.
      * @param content The content for the file.
      */
@@ -191,7 +195,7 @@ public class Daemon {
         } catch (IOException e) {
             throw new RuntimeException ("Error creating file.",e);
         } finally {
-            try { 
+            try {
                 if(fw !=  null)
                     fw.close();
                 fw=null;
@@ -201,10 +205,10 @@ public class Daemon {
     }
 
     /**
-     * 
+     *
      * @return The shutdown port that was configured (if any) to launch the
      * Daemon (if it was launched), the default port otherwise
-     * 
+     *
      * @see #OPT_SHUTDOWN_PORT
      */
     static int getShutdownPort() {
@@ -218,11 +222,11 @@ public class Daemon {
     /**
      * Returns the command that must be issued to the shutdown port to stop the
      * launched Daemon instance.
-     * 
+     *
      * @return The shutdown command that was configured (if any) when launching the
      * Daemon instance (if it was launched), the default command otherwise
-     * 
-     * @see #OPT_SHUTDOWN_CMD 
+     *
+     * @see #OPT_SHUTDOWN_CMD
      */
     static String getShutdown() {
         String read = readDaemonProperty(OPT_SHUTDOWN_CMD);
@@ -394,12 +398,13 @@ public class Daemon {
     /**
      * Returns the file reference of the Runner's home directory. Creates one if
      * it doesn't exist and if the create flag is set to <code>true</code>.
-     * 
+     *
      * @return
      */
     private static File getRunnerHomeDir(boolean create) {
+    	String runnerHomeDirSuffix = createRunnerHomeDirSuffix();
         String homeDirPath = System.getProperty("user.home")
-                + File.separator + ".pax"+ File.separator + "runner";
+                + File.separator + ".pax"+ File.separator + runnerHomeDirSuffix;
         final File homeDir = new File(homeDirPath);
         if ( !homeDir.exists() && create ) {
             if( homeDir.mkdirs() ) {
@@ -409,7 +414,18 @@ public class Daemon {
         return homeDir;
     }
 
-    private static int parseSafeInt(String arg) {
+    private static String createRunnerHomeDirSuffix() {
+    	String runnerHomeDirSuffix = System.getProperty(RELATIVE_RUNNER_HOME);
+    	System.out.println(runnerHomeDirSuffix);
+
+		if (runnerHomeDirSuffix == null) {
+			runnerHomeDirSuffix = "runner";
+		}
+
+		return runnerHomeDirSuffix;
+	}
+
+	private static int parseSafeInt(String arg) {
         if (arg != null && arg.length() > 0) {
             try {
                 return Integer.parseInt(arg);
@@ -459,7 +475,7 @@ public class Daemon {
      * the client is connecting from a loopback adapter (localhost), no password is required.
      * If the client connects via telnet, password is required to issue commands.
      * The shutdown sequence begins if the client enters the correct shutdown command.
-     * 
+     *
      * @author Thomas Joseph.
      *
      */
@@ -578,7 +594,7 @@ public class Daemon {
 
         /**
          * Reads the given stream for string commands.
-         * 
+         *
          * @param stream
          * @return the command that was issued in the input stream.
          */
